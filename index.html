@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .chat-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        .chat-input {
+            width: calc(100% - 50px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .chat-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #28a745;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .chat-button:hover {
+            background-color: #218838;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .chat-message.bot {
+            text-align: left;
+        }
+        .chat-message.user span {
+            color: blue;
+            font-weight: bold;
+        }
+        .chat-message.bot span {
+            color: green;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            color: grey;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>FAQ Chatbot</h2>
+        <div class="chat-box" id="chat-box"></div>
+        <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question...">
+        <button id="chat-button" class="chat-button">Send</button>
+    </div>
+    <script>
+        document.getElementById('chat-button').addEventListener('click', sendMessage);
+        document.getElementById('chat-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const userInput = document.getElementById('chat-input').value;
+            if (userInput.trim() !== '') {
+                addMessage(userInput, 'user', 'You');
+                addLoading();
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: userInput })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    setTimeout(() => {
+                        removeLoading();
+                        addMessage(data.response, 'bot', 'Bot');
+                    }, 1000);
+                });
+                document.getElementById('chat-input').value = '';
+            }
+        }
+
+        function addMessage(text, sender, label) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-message', sender);
+            messageDiv.innerHTML = `<span>${label}:</span> ${text}`;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function addLoading() {
+            const chatBox = document.getElementById('chat-box');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.classList.add('chat-message', 'bot', 'loading');
+            loadingDiv.id = 'loading';
+            loadingDiv.textContent = 'Bot is typing...';
+            chatBox.appendChild(loadingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loadingDiv = document.getElementById('loading');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+    </script>
+</body>
+</html>
+
